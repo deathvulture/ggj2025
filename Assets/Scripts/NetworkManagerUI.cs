@@ -10,30 +10,27 @@ using TMPro;
 public class NetworkManagerUI : MonoBehaviour {
     [SerializeField] private Button serverBtn;
     [SerializeField] private Button clientBtn;
+    [SerializeField] private Button hostBtn;
     [SerializeField] private GameObject gameCode;
     [SerializeField] private GameObject connectionBtns;
     [SerializeField] private GameObject joinPanel;
     [SerializeField] private Button joinBtn;
+    [SerializeField] private TMP_InputField addressInput;
+    private TextMeshProUGUI gameCodeText;
     private string ip;
 
+
     private void Awake() {
+        gameCodeText = gameCode.GetComponent<TextMeshProUGUI>();
         string localIP = GetLocalIPAddress();
-        string encodedIp = EncodeIP(localIP);
-        Debug.Log("Encoded IP: " + encodedIp);
-        Debug.Log("Decoded IP: " + DecodeHexToIP(encodedIp));
-
-        
-
-        string encodedIP2 = EncodeIPToBase36(localIP);
-        Debug.Log("Encoded IP36: " + encodedIP2);
-
-        string decodedIP2 = DecodeBase36ToIP(encodedIP2);
-        Debug.Log("Decoded IP: " + decodedIP2);
+        string encodedIP = EncodeIPToBase36(localIP);
+        Debug.Log("Encoded IP36: " + encodedIP);
+        Debug.Log("Decoded IP: " + DecodeBase36ToIP(encodedIP));
 
         serverBtn.onClick.AddListener(() => {
             NetworkManager.Singleton.StartServer();
             gameCode.SetActive(true);
-            gameCode.GetComponent<TextMeshProUGUI>().text = "Game Code: " + encodedIP2;
+            gameCodeText.text = "Game Code: " + encodedIP;
             connectionBtns.SetActive(false);
         });
 
@@ -43,12 +40,22 @@ public class NetworkManagerUI : MonoBehaviour {
         });
 
         joinBtn.onClick.AddListener(() => {
-            NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData("192.168.0.101", (ushort)1234, "0.0.0.0");
+            string decodedIp = DecodeBase36ToIP(addressInput.text);
+            Debug.Log(addressInput.text == "1HGE0YT");
+            Debug.Log($"encoded ip {addressInput.text}");
+            Debug.Log($"Decoded ip {decodedIp}");
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(decodedIp, (ushort)1234, "0.0.0.0");
 
             NetworkManager.Singleton.StartClient();
             connectionBtns.SetActive(false);
         });
 
+        hostBtn.onClick.AddListener(() => {
+            NetworkManager.Singleton.StartHost();
+            gameCode.SetActive(true);
+            gameCodeText.text = "Game Code: " + encodedIP;
+            connectionBtns.SetActive(false);
+        });
     }
 
     private string GetLocalIPAddress() {
